@@ -1,132 +1,130 @@
-const abaListaMestra = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Lista Mestra - Forms')
+const masterListSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Master List - Forms')
 
-function gerarListaMestra(){
+function generateMasterList(){
 
-  //Pegando os dados da planilha preenchida pelo forms
-  let dadosListaMestra = abaListaMestra.getRange(1,1,abaListaMestra.getLastRow(),abaListaMestra.getLastColumn()).getValues()
-  let novosDadosListaMestra = dadosListaMestra.filter(function(linha){return linha[6]=="" || linha[6]==null})
+  //Fetching data from the spreadsheet filled out by the form
+  let masterListData = masterListSheet.getRange(1,1,masterListSheet.getLastRow(),masterListSheet.getLastColumn()).getValues()
+  let masterListNewData = masterListData.filter(function(linha){return linha[6]=="" || linha[6]==null})
 
-  //Para cada projeto
-  for(let i=0; i<novosDadosListaMestra.length; i++){
-    let projetoNome = novosDadosListaMestra[i][1]
-    let clienteNome = novosDadosListaMestra[i][2]
-    let pastaAtualizadosId = PlanilhaBaseDadoseInovacao.getIdFromUrl(novosDadosListaMestra[i][3])
-    let discordId = novosDadosListaMestra[i][4]
-    let index = dadosListaMestra.indexOf(novosDadosListaMestra[i])
+  //For each project
+  for(let i=0; i<masterListNewData.length; i++){
+    let projectName = masterListNewData[i][1]
+    let clientName = masterListNewData[i][2]
+    let updatedFolderId = PlanilhaBaseDadoseInovacao.getIdFromUrl(masterListNewData[i][3])
+    let discordId = masterListNewData[i][4]
+    let index = masterListData.indexOf(masterListNewData[i])
 
-    Logger.log(`${i+1}. Projeto "${projetoNome}" do cliente "${clienteNome}"`)
+    Logger.log(`${i+1}. Project "${projectName}" of client "${clientName}"`)
 
-    //Pegando os arquivos presentes na pasta do projeto
-    let pastaAtualizados = DriveApp.getFolderById(pastaAtualizadosId)
-    let arquivosPastaAtualizados = pastaAtualizados.getFilesByName(`Lista mestra verificações - ${projetoNome}`)
+    //Fetching the present files in the project folder
+    let updatedFolder = DriveApp.getFolderById(updatedFolderId)
+    let updatedFolderFiles = updatedFolder.getFilesByName(`Master list - ${projectName}`)
 
-    //Excluindo a antiga planilha de lista mestra caso exista
-    if(arquivosPastaAtualizados.hasNext()){
-      arquivosPastaAtualizados.next().setTrashed(true)
-      Logger.log('Lista mestra já existente foi excluída')
+    //Deleting the old master list spreadsheet if it exists
+    if(updatedFolderFiles.hasNext()){
+      updatedFolderFiles.next().setTrashed(true)
+      Logger.log('Existing master list has been deleted')
     }
 
-    //Criando a planilha de lista mestra
-    let planilhaListaMestra = SpreadsheetApp.create(`Lista mestra verificações - ${projetoNome}`)
+    //Creating the master list spreadsheet
+    let masterListSpreadsheet = SpreadsheetApp.create(`Master list - ${projectName}`)
 
-    //Movendo para a pasta do projeto
-    DriveApp.getFileById(planilhaListaMestra.getId()).moveTo(pastaAtualizados)
+    //Moving to the project folder
+    DriveApp.getFileById(masterListSpreadsheet.getId()).moveTo(updatedFolder)
 
-    //Pegando o link da planilha final
-    let planilhaLink = planilhaListaMestra.getUrl()
-    Logger.log(`Lista mestra criada: ${planilhaLink}`)
+    //Fetching the final spreadsheet link
+    let spreadsheetLink = masterListSpreadsheet.getUrl()
+    Logger.log(`Master list created: ${spreadsheetLink}`)
 
-    //Adicionando o link da planilha
-    abaListaMestra.getRange(index+1,7).setValue(planilhaLink)
+    //Adding the spreadsheet link
+    masterListSheet.getRange(index+1,7).setValue(spreadsheetLink)
 
-    //Renomeando a aba da planilha
-    let abaVerificacoes = planilhaListaMestra.getSheetByName('Página1')
-    abaVerificacoes.setName('Verificações')
+    //Renaming the spreadsheet sheet
+    let checkSheet = masterListSpreadsheet.getSheetByName('Page1')
+    checkSheet.setName('Checks')
 
-    //Configurando planilha
-    abaVerificacoes.setFrozenRows(1)
-    abaVerificacoes.setColumnWidth(1,150)
-    abaVerificacoes.setColumnWidth(3,300)
-    abaVerificacoes.setColumnWidth(4,550)
-    abaVerificacoes.getRange('A1:Z1000').setBorder(true,true,true,true,true,true,"#ffffff",SpreadsheetApp.BorderStyle.SOLID)
+    //Setting up the spreadsheet
+    checkSheet.setFrozenRows(1)
+    checkSheet.setColumnWidth(1,150)
+    checkSheet.setColumnWidth(3,300)
+    checkSheet.setColumnWidth(4,550)
+    checkSheet.getRange('A1:Z1000').setBorder(true,true,true,true,true,true,"#ffffff",SpreadsheetApp.BorderStyle.SOLID)
 
-    //Criando o cabeçalho e adicionando ao array final
-    let cabecalhoPlanilha = abaVerificacoes.getRange('A1:E1')
-    cabecalhoPlanilha.setValues([['Disciplina','Formato','Nome do arquivo','Link do arquivo','Verificado']])
-    cabecalhoPlanilha.setBackground('#ffdd00')
-    cabecalhoPlanilha.setFontFamily('Montserrat')
-    cabecalhoPlanilha.setFontWeight("bold")
-    cabecalhoPlanilha.setBorder(true, true, true, true, true, false, "black", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
+    //Creating the header and adding it to the final array
+    let spreadsheetHeader = checkSheet.getRange('A1:E1')
+    spreadsheetHeader.setValues([['Discipline','Format','File name','File link','Checked']])
+    spreadsheetHeader.setBackground('#ffdd00')
+    spreadsheetHeader.setFontFamily('Montserrat')
+    spreadsheetHeader.setFontWeight("bold")
+    spreadsheetHeader.setBorder(true, true, true, true, true, false, "black", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
 
-    //Verificando as disciplinas existentes no projeto
-    let disciplinas = DriveApp.getFolderById(pastaAtualizadosId).getFolders()
-    var disciplinasExistentes = []
+    //Checking the existing disciplines in the project
+    let disciplines = DriveApp.getFolderById(updatedFolderId).getFolders()
+    var existingDisciplines = []
 
-    //Pegando nome e ID das disciplinas
-    while(disciplinas.hasNext()){
-      let disciplina = disciplinas.next()
-      let disciplinaNome = disciplina.getName().substring(disciplina.getName().length-3)
-      var disciplinaId = disciplina.getId()
-      disciplinasExistentes.push([disciplinaNome,disciplinaId])
+    //Fetching the disciplines' name and ID
+    while(disciplines.hasNext()){
+      let discipline = disciplines.next()
+      let disciplineName = discipline.getName().substring(discipline.getName().length-3)
+      var disciplineId = discipline.getId()
+      existingDisciplines.push([disciplineName,disciplineId])
     }
 
-    let dadosFinais = []
+    let finalData = []
 
-    //Para cada disciplina existente
-    for(let j=0; j<disciplinasExistentes.length; j++){
-      Logger.log(`${i+1}.${j+1}. Disciplina: ${disciplinasExistentes[j][0]}`)
-      let formatos = DriveApp.getFolderById(disciplinasExistentes[j][1]).getFolders()
-      let formatosExistentes = []
+    //For each existing discipline
+    for(let j=0; j<existingDisciplines.length; j++){
+      Logger.log(`${i+1}.${j+1}. Discipline: ${existingDisciplines[j][0]}`)
+      let formats = DriveApp.getFolderById(existingDisciplines[j][1]).getFolders()
+      let existingFormats = []
 
-      //Pegando nome e ID dos formatos
-      while (formatos.hasNext()){
-        let formato = formatos.next()
-        let formatoNomeCompleto = formato.getName()
-        if(formatoNomeCompleto.substring(formatoNomeCompleto.length-6)=="OUTROS"){
-          var formatoNome = "OUTROS"
+      //Fetching the formats' name and ID
+      while (formats.hasNext()){
+        let format = formats.next()
+        let fullNameFormat = format.getName()
+        if(fullNameFormat.substring(fullNameFormat.length-6)=="OTHERS"){
+          var formatName = "OTHERS"
         }
         else{
-          var formatoNome = formatoNomeCompleto.substring(formatoNomeCompleto.length-3)
+          var formatName = fullNameFormat.substring(fullNameFormat.length-3)
         }
-        let formatoId = formato.getId()
-        formatosExistentes.push([formatoNome,formatoId])
+        let formatId = format.getId()
+        existingFormats.push([formatName,formatId])
       }
 
-      //Para cada formato existente
-      for(let k=0; k<formatosExistentes.length; k++){
-        Logger.log(`${i+1}.${j+1}.${k+1}. Formato: ${formatosExistentes[k][0]}`)
-        var arquivos = DriveApp.getFolderById(formatosExistentes[k][1]).getFiles()
+      //For each existing format
+      for(let k=0; k<existingFormats.length; k++){
+        Logger.log(`${i+1}.${j+1}.${k+1}. Format: ${existingFormats[k][0]}`)
+        var files = DriveApp.getFolderById(existingFormats[k][1]).getFiles()
 
-        //Pegando nome e ID dos arquivos
-        while (arquivos.hasNext()){
-          let arquivo = arquivos.next()
-          let arquivoNome = arquivo.getName()
-          let arquivoId = arquivo.getId()
-          Logger.log(`Arquivo ${arquivoNome}`)
+        //Fetching the files' name and ID
+        while (files.hasNext()){
+          let file = files.next()
+          let fileName = file.getName()
+          let fileId = file.getId()
+          Logger.log(`File ${fileName}`)
 
-          //Pegando informações finais sobre os arquivos
-          // let disciplinaArquivo = disciplinasExistentes[i][0]
-          // let formatoArquivo = formatosExistentes[j][0]
-          let disciplinaArquivo = disciplinasExistentes[j][0]
-          let formatoArquivo = formatosExistentes[k][0]
-          dadosFinais.push([disciplinaArquivo,formatoArquivo,arquivoNome,`https://drive.google.com/file/d/${arquivoId}`,''])
+          //Fetching the files' final information
+          let fileDiscipline = existingDisciplines[j][0]
+          let fileFormat = existingFormats[k][0]
+          finalData.push([fileDiscipline,fileFormat,fileName,`https://drive.google.com/file/d/${fileId}`,''])
         }
       }
     }
 
-    Logger.log(dadosFinais)
+    Logger.log(finalData)
 
-    //Adicionando os dados finais na planilha do projeto e configurando as bordas das células
-    var corpoPlanilha = abaVerificacoes.getRange(2,1,dadosFinais.length,5)
-    corpoPlanilha.setValues(dadosFinais)
-    corpoPlanilha.setFontFamily('Montserrat')
-    corpoPlanilha.setBorder(true, true, true, true, true, false, "black", SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
+    //Adding the final data to the project spreadsheet and setting up cell borders
+    var spreadsheetBody = checkSheet.getRange(2,1,finalData.length,5)
+    spreadsheetBody.setValues(finalData)
+    spreadsheetBody.setFontFamily('Montserrat')
+    spreadsheetBody.setBorder(true, true, true, true, true, false, "black", SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
 
-    //Adicionando checks na última coluna da planilha
-    abaVerificacoes.getRange(2,5,dadosFinais.length,1).setDataValidation(SpreadsheetApp.newDataValidation().requireCheckbox().build())
+    //Adding checkboxes in the last column of the spreadsheet
+    checkSheet.getRange(2,5,finalData.length,1).setDataValidation(SpreadsheetApp.newDataValidation().requireCheckbox().build())
 
-    let mensagem = `\n **-------------------------------------------------------------------------------------------------------------------------**\n:loudspeaker:   **NOTIFICAÇÃO DO PROJETO: ${projetoNome} **\n \n:arrow_right:  A lista de arquivos presentes na pasta de Projetos Atualizados foi gerada com sucesso. Confira no seguinte link: ${planilhaLink}`
+    let message = `\n **-------------------------------------------------------------------------------------------------------------------------**\n:loudspeaker:   **PROJECT NOTIFICATION: ${projectName} **\n \n:arrow_right: The list of files in the Updated Projects folder has been successfully generated. Check it at the following link: ${spreadsheetLink}`
 
-    try{PlanilhaBaseDadoseInovacao.notificacaoDiscord(discordId,mensagem)}catch(e){Logger.log(`Erro ao enviar a notificação no Discord: ${e}`)}
+    try{DataAndInnovationSpreadsheet.discordNotification(discordId,message)}catch(e){Logger.log(`Error sending notification on Discord: ${e}`)}
   }
 }
