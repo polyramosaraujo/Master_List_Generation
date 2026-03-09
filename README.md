@@ -1,6 +1,6 @@
 # 📋 Automatic scan of Google Drive folder and generation of files checklist
 
-This script automates the creation of a project checklist spreadsheet that lists all files stored on Google Drive. It is triggered whenever a form is submitted and executes a series of steps to organize, record, and generate an updated report with the files found in the project folders.
+This system automates the creation of a project checklist spreadsheet that lists all files stored on Google Drive. It is triggered whenever a form is submitted and executes a series of steps to organize, record, and generate an updated report with the files found in the project folders.
 
 ## 🚀 How It Works
 
